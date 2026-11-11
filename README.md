@@ -6,14 +6,14 @@ It shows the smallest useful engine plugin. Databasify runs every engine through
 
 ## Try it
 
-1. Download this repository as a zip (or point Databasify at `databasifylabs/example-database-plugin`).
+1. Download this repository as a zip (or point Databasify at `databasifylabs/plugin-example-database`).
 2. In Databasify, open **Plugins** and install it from the repository or upload the zip.
 3. Create a database and pick **Example Cache**. It offers lines 8 and 9, and runs and connects like Valkey.
 
 ## File layout
 
 ```
-composer.json                      name, PSR-4 autoload and extra.databasify (plugin class, requires, icon)
+composer.json                      name, PSR-4 autoload and extra.databasify (plugin class, requires, icon, engines)
 src/ExampleDatabasePlugin.php      registers the engine in boot()
 public/icon.svg                    plugin icon
 public/icons/database-providers/example-cache.svg
@@ -21,6 +21,8 @@ public/icons/database-providers/example-cache.svg
 ```
 
 ## What the registration sets, and why
+
+- `extra.databasify.engines` in `composer.json` (`["example-cache"]`): every engine id the plugin registers. Databasify reads it before any plugin code runs. It shows the admin a warning to confirm, because this is a community engine built and supported by the plugin's author, not Databasify. A plugin that registers an id it didn't declare fails to boot, and an update that declares a new engine asks again.
 
 - `image('ghcr.io/databasifylabs/databasify-valkey')`: without it the image would be `databasify-example-cache`, which does not exist. Databasify picks the newest `<line>.x` tag of the database's line and pins its digest.
 - `versions('9', [...])`: the lines offered on the create page, each one a tag prefix in the image.
@@ -32,8 +34,16 @@ The server side follows the image, not the plugin id. The image's `io.databasify
 
 ## Start your own engine plugin
 
-- **Your own engine:** engine logic is Go code in the shared `databasify` wrapper, so a new engine is a pull request to [`databasifylabs/engines`](https://github.com/databasifylabs/engines): a package under `internal/engines/<name>` implementing `contracts.Engine`, and an image under `images/<name>` that passes the smoke test and its conformance suite. Databasify installs the same pinned wrapper on every node, so an engine kept only in a fork loses its code at the next wrapper update. Once its image is published with exact `<line>.x` tags, register it from your plugin.
-- **Your registration:** copy `src/ExampleDatabasePlugin.php`, set your id, label, category, image and lines, and describe how clients connect with `connection()`.
+An engine plugin needs two repositories:
+
+- **Your engine:** create a repository from [`databasifylabs/engine-template`](https://github.com/databasifylabs/engine-template).
+  - It is Go code on the public [engine SDK](https://github.com/databasifylabs/engine-sdk), and its workflows publish your images to `ghcr.io/<your owner>/databasify-<engine>` with exact `<line>.x` tags.
+  - Make the packages public, because Databasify pulls them without credentials.
+  - Each image carries the SDK version it was built on. Databasify only runs images inside its SDK range, so rebuild when the SDK moves.
+- **Your registration:** copy this repository.
+  - Declare your engine id in `extra.databasify.engines`.
+  - Copy `src/ExampleDatabasePlugin.php` and set your id, label, category, `image()` and lines.
+  - Describe how clients connect with `connection()`.
 
 Read more in [Writing plugins](https://docs.databasify.io/plugins/writing-plugins/).
 
