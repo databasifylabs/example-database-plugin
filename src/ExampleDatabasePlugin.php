@@ -4,41 +4,45 @@ declare(strict_types=1);
 
 namespace Databasify\ExampleDatabase;
 
-use App\DatabaseProviders\Drivers\AbstractSentinelDriver;
+use App\DTOs\Databases\ConnectionProfile;
 use App\Plugins\AbstractPlugin;
-use App\Support\Databases\ClientPorts;
 
 final class ExampleDatabasePlugin extends AbstractPlugin
 {
-    private const string VIEWS = 'example-database-plugin';
+    private const string ID = 'example-cache';
 
-    private const string LINE = '9';
+    private const array ENV_KEYS = ['host' => 'REDIS_HOST', 'port' => 'REDIS_PORT', 'username' => null, 'password' => 'REDIS_PASSWORD', 'database' => null];
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__.'/../resources/views', self::VIEWS);
-
-        $this->databasify()->database(ExampleCache::id())
+        $this->databasify()->database(self::ID)
             ->label('Example Cache')
-            ->handler(ExampleCache::class)
             ->category('Caching')
-            ->stopSeconds(120)
             ->image('ghcr.io/databasifylabs/databasify-valkey')
-            ->versions(self::LINE, [['value' => self::LINE, 'label' => 'Example Cache (Valkey 9)']])
-            ->scripts('ssh.engines.valkey', [self::LINE => ['config.host-tuning' => $this->stepView('config.host-tuning')]])
-            ->directory('/srv/valkey')
-            ->systemUser('valkey')
-            ->port(ClientPorts::KEY_VALUE)
-            ->peerPorts([AbstractSentinelDriver::DATA_PORT, AbstractSentinelDriver::SENTINEL_PORT])
-            ->nodeCertificates(['ca.crt', 'server.pem'])
+            ->versions('9', [['value' => '8', 'label' => 'Example Cache (Valkey 8)'], ['value' => '9', 'label' => 'Example Cache (Valkey 9)']])
+            ->connection(
+                $this->connectionVia('valkey-cli --tls --insecure -u rediss://{username}:{password}@{host}:{port}'),
+                withPublicCertificate: $this->connectionVia('valkey-cli --tls -u rediss://{username}:{password}@{host}:{port}'),
+            )
+            ->migrationSource(6379, credentialsRequired: false, selectsDatabases: false)
+            ->readOnlyNodesVote()
             ->persistenceChoice()
             ->publicCertificate()
             ->failoverHint('Sentinel needs three voting nodes to fail over on its own. Add a standby or a read-only node.')
             ->register();
     }
 
-    private function stepView(string $step): string
+    private function connectionVia(string $command): ConnectionProfile
     {
-        return self::VIEWS.'::ssh.engines.'.ExampleCache::id().'.lines.'.self::LINE.".{$step}";
+        return new ConnectionProfile(
+            uriScheme: 'rediss',
+            uriQuery: '',
+            tlsParameter: 'tls',
+            tlsMode: 'on',
+            command: $command,
+            fixedUsername: 'default',
+            selectsDatabase: false,
+            envKeys: self::ENV_KEYS,
+        );
     }
 }

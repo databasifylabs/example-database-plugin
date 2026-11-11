@@ -1,6 +1,6 @@
 {
     "name": "databasifylabs/example-database-plugin",
-    "description": "Example Databasify plugin: a caching engine that reuses the built-in Valkey driver, image and step scripts.",
+    "description": "Example Databasify plugin: a caching engine registered on the official Valkey engine image.",
     "version": "1.0.0",
     "type": "library",
     "license": "Apache-2.0",
