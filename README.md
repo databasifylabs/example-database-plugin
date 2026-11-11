@@ -2,7 +2,7 @@
 
 An example [Databasify](https://github.com/databasifylabs/databasify) plugin that adds an engine called **Example Cache** (`example-cache`, category Caching).
 
-It shows the smallest useful engine plugin. Databasify runs every engine through the `databasify` command inside the engine's container image, so a plugin engine is a registration plus an image. This one registers the official Valkey image, `ghcr.io/databasifylabs/databasify-valkey`, under its own id, name and version lines. It has no PHP driver and no server scripts.
+It shows the smallest useful engine plugin. Databasify runs every engine through the `databasify` command inside the engine's container image, so a plugin engine is a registration plus a published engine image. This one registers the official Valkey image, `ghcr.io/databasifylabs/databasify-valkey`, under its own id, name and version lines. It has no PHP driver and no server scripts.
 
 ## Try it
 
@@ -32,7 +32,7 @@ The server side follows the image, not the plugin id. The image's `io.databasify
 
 ## Start your own engine plugin
 
-- **Your own image:** build a container image that runs the `databasify` command and answers the engine API contract in [`databasifylabs/engine-api`](https://github.com/databasifylabs/engine-api): JSON on stdin and stdout, quick and long commands, and `unsupported` for any feature your engine doesn't offer. Label it `io.databasify.engine=<name>`, publish exact `<line>.x` release tags, and run the contract's conformance suite against it.
+- **Your own engine:** engine logic is Go code in the shared `databasify` wrapper, so a new engine is a pull request to [`databasifylabs/engines`](https://github.com/databasifylabs/engines): a package under `internal/engines/<name>` implementing `contracts.Engine`, and an image under `images/<name>` that passes the smoke test and its conformance suite. Databasify installs the same pinned wrapper on every node, so an engine kept only in a fork loses its code at the next wrapper update. Once its image is published with exact `<line>.x` tags, register it from your plugin.
 - **Your registration:** copy `src/ExampleDatabasePlugin.php`, set your id, label, category, image and lines, and describe how clients connect with `connection()`.
 
 Read more in [Writing plugins](https://docs.databasify.io/plugins/writing-plugins/).
