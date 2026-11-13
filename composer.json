@@ -1,7 +1,7 @@
 {
     "name": "databasifylabs/plugin-example-database",
-    "description": "Example Databasify plugin: a caching engine registered on the official Valkey engine image.",
-    "version": "1.0.0",
+    "description": "Example Databasify plugin: a community engine with its own driver, running on the engine-template image.",
+    "version": "2.0.0",
     "type": "library",
     "license": "Apache-2.0",
     "autoload": {
@@ -12,10 +12,10 @@
     "extra": {
         "databasify": {
             "plugin": "Databasify\\ExampleDatabase\\ExampleDatabasePlugin",
-            "requires": "^0.1",
+            "requires": "^0.2",
             "icon": "icon.svg",
             "engines": [
-                "example-cache"
+                "example"
             ]
         }
     }

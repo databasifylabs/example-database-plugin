@@ -9,7 +9,7 @@ use App\Plugins\AbstractPlugin;
 
 final class ExampleDatabasePlugin extends AbstractPlugin
 {
-    private const string ID = 'example-cache';
+    private const string ID = 'example';
 
     private const array ENV_KEYS = ['host' => 'REDIS_HOST', 'port' => 'REDIS_PORT', 'username' => null, 'password' => 'REDIS_PASSWORD', 'database' => null];
 
@@ -18,8 +18,8 @@ final class ExampleDatabasePlugin extends AbstractPlugin
         $this->databasify()->database(self::ID)
             ->label('Example Cache')
             ->category('Caching')
-            ->image('ghcr.io/databasifylabs/databasify-valkey')
-            ->versions('9', [['value' => '8', 'label' => 'Example Cache (Valkey 8)'], ['value' => '9', 'label' => 'Example Cache (Valkey 9)']])
+            ->image('ghcr.io/databasifylabs/databasify-example')
+            ->versions('9', [['value' => '9', 'label' => 'Example Cache (Valkey 9)']])
             ->connection(
                 $this->connectionVia('valkey-cli --tls --insecure -u rediss://{username}:{password}@{host}:{port}'),
                 withPublicCertificate: $this->connectionVia('valkey-cli --tls -u rediss://{username}:{password}@{host}:{port}'),
@@ -29,6 +29,7 @@ final class ExampleDatabasePlugin extends AbstractPlugin
             ->persistenceChoice()
             ->publicCertificate()
             ->failoverHint('Sentinel needs three voting nodes to fail over on its own. Add a standby or a read-only node.')
+            ->driver(ExampleDriver::class)
             ->register();
     }
 
